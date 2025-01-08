@@ -1,4 +1,4 @@
-# Tex⁺⁺
+# Text⁺⁺
 
 Insert Text with special characters like greek letters, superscripts, subscripts and other symbols. It also works with existing text. You can also make your text 'rotation enabled'!
 
