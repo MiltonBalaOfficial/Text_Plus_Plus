@@ -1,19 +1,21 @@
 local symbolDictionary = require("symbol_dictionary")
+local rotationEnabledTextHelper = require("rotationEnabledTextHelper") -- tried but failed
 local utf8 = require("utf8")
 local lgi = require("lgi")
 local Gtk = lgi.require("Gtk", "3.0")
-local Gdk = lgi.Gdk
-local activeTool, entry, text_view, text_buffer, fontName, fontColor, inputFontSize, fontSize, textPositionX,
-    textPositionY
-textPositionX, textPositionY = 50, 50
+local Gdk = lgi.require("Gdk", "3.0")
+
+-- Actual values are stored to get back the stroke if the plugin is closed without inserting anything
+local ActualText, ActualFontName, ActualFontSize, ActualFontColor, ActualTextPositionX, ActualTextPositionY
+local activeTool, selectedTextString, text_view, text_buffer, fontName, fontColor, fontSize, textPositionX,
+    textPositionY, zoom_factor, inputText
 local isDeletedAndNeedToBeAdded
-local r, g, b
 
 -- Kerning pair adjustment data for rotation enabled text
 local specialPairs = require("kerning_pairs")
+
 -- Global variables for rotation enabled text
 local sep, sourcePath, scaleFactor, amountBaselineShiftY, startingX
-local inputText, fontColor
 
 -- Register the plugin
 function initUi()
@@ -29,44 +31,61 @@ function initUi()
     })
 end
 
--- Main function to Starting Thanks for using the plugin
+function decimal_to_rgb(color)
+    local r = (color >> 16) & 0xFF -- Extract the red component
+    local g = (color >> 8) & 0xFF -- Extract the green component
+    local b = color & 0xFF -- Extract the blue component
+    return r, g, b
+end
+
+-- Main function to Starting
 function getInfoAndCreateWindow()
     -- save the active tool to reactivate at the end
     local toolInfo = app.getToolInfo("active")
     activeTool = toolInfo.type
 
+    -- Get the Text tool font and font size, if any selected text found then fontName and size will be updated later from it.
+    local textTool = app.getToolInfo("text")
+    fontName = textTool.font.name
+    fontSize = textTool.font.size
+    fontColor = textTool.color
+
+    -- Set a starting coordinate
+    textPositionX, textPositionY = 0, 0
+
+    -- Trigger the rectangle selection tool (at the starting of the plugin) for selecting the working textbox
+    app.uiAction({
+        action = "ACTION_TOOL_SELECT_RECT"
+    })
+
+    -- Try to get entry text and other data if any text is selected (at the starting of the plugin)
+    local status, isSelection = pcall(app.getTexts, "selection") -- Run without throwing error message if there is no selection of the text (then new text can be inserted)
+    if status and isSelection and #isSelection > 0 then
+        getText()
+    end
+
+    -- get the current zoom level of the app
+    zoom_factor = app.getZoom()
+
     -- Start the input window
     createTextInputWindow()
 end
 
-function decimal_to_rgb(color)
-    local r = (color >> 16) & 0xFF -- Extract the red component
-    local g = (color >> 8) & 0xFF -- Extract the green component
-    local b = color & 0xFF -- Extract the blue component
-    return r, g, b 
-end
-
-
--- Gets the text from the selection and Focus back to the input field
-local ActualText, ActualFontName, ActualFontSize, ActualFontColor, ActualTextPositionX, ActualTextPositionY
-
+-- Gets the text from the selection
 function getText()
     -- Get the currently selected text table
     local selectedTexts = app.getTexts("selection")
 
-    -- Use the first selected text as a reference
+    -- Use the first selected text
     local firstText = selectedTexts[1]
+    selectedTextString = firstText.text
 
-    -- Set the text of the entry field
-    text_buffer:set_text(firstText.text, -1)
-
-    -- Extract other info from the selected text
+    -- Extract other info from the selected text to update the field with the value from the selected text
     fontName = firstText.font.name
     fontSize = firstText.font.size
     fontColor = firstText.color
     textPositionX = firstText.x
     textPositionY = firstText.y
-    r, g, b = decimal_to_rgb(fontColor)
 
     -- Delete the old text object and refresh the UI, before deleting keep safe the Actual text
     isDeletedAndNeedToBeAdded = true
@@ -108,7 +127,7 @@ function insertText(inputText, restoreTheDeletedText)
                 text = inputText,
                 font = {
                     name = fontName,
-                    size = inputFontSize
+                    size = fontSize
                 },
                 color = fontColor,
                 x = textPositionX,
@@ -226,17 +245,6 @@ end
 
 -- Function to create the custom text input window with special symbols
 function createTextInputWindow()
-    -- save the active tool to reactivate at the end
-    local toolInfo = app.getToolInfo("active")
-    activeTool = toolInfo.type
-
-    -- Get the Text tool selected font and font size, if any selected text found then fontName and size will be updated later
-    local textTool = app.getToolInfo("text")
-    fontName = textTool.font.name
-    fontSize = textTool.font.size
-    fontColor = textTool.color
-    r, g, b = decimal_to_rgb(fontColor)
-
     -- Custom CSS 
     local customCssProvider = Gtk.CssProvider()
     customCssProvider:load_from_data([[
@@ -256,7 +264,6 @@ function createTextInputWindow()
 
         window {
             background-color: transparent;
-            color: red;
             border: 10px solid rgba(50, 50, 50, 1);
         }
 
@@ -274,12 +281,13 @@ function createTextInputWindow()
         }
     ]])
 
--- Function to set font size, font name, and color dynamically
-local css_provider = Gtk.CssProvider()
-local function set_font_style(widget, font_size, font_name, r, g, b)
-    -- Format the RGB color into CSS-compatible `rgb(red, green, blue)`
-    local font_color = string.format("rgb(%d, %d, %d)", r, g, b)
-    local css_data = string.format([[
+    -- Function to set font size, font name, and color dynamically
+    local css_provider = Gtk.CssProvider()
+    local function set_font_style(widget, font_size, font_name)
+        -- Format the RGB color into CSS-compatible `rgb(red, green, blue)`
+        local r, g, b = decimal_to_rgb(fontColor)
+        local font_color = string.format("rgb(%d, %d, %d)", r, g, b)
+        local css_data = string.format([[
         textview {
             font-family: '%s';
             font-size: %fpx;
@@ -288,16 +296,15 @@ local function set_font_style(widget, font_size, font_name, r, g, b)
             color: %s;
         }
     ]], font_name, font_size, font_color)
-    
-    css_provider:load_from_data(css_data)
-    local context = widget:get_style_context()
-    context:add_provider(css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
-end
 
+        css_provider:load_from_data(css_data)
+        local context = widget:get_style_context()
+        context:add_provider(css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
+    end
 
-
+    -- The main Window
     local window = Gtk.Window {
-        title = "Insert Custom Text with Symbols",
+        title = "Text⁺⁺",
         default_width = 800,
         default_height = 250,
         border_width = 10,
@@ -306,6 +313,7 @@ end
                 insertText(nil, true)
                 isDeletedAndNeedToBeAdded = nil
             end
+            selectedTextString = nil
             window:destroy()
         end
     }
@@ -313,9 +321,6 @@ end
     -- Apply the CSS to the window
     local context = window:get_style_context()
     context:add_provider(customCssProvider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
-
-    -- Set the window position to the center of the screen
-    window:set_position(Gtk.WindowPosition.CENTER)
 
     -- Create a vertical box for layout
     local main_vertical_layout_box = Gtk.Box {
@@ -336,10 +341,9 @@ end
     scrolled_window_for_entry:add(text_view)
     main_vertical_layout_box:pack_start(scrolled_window_for_entry, true, true, 0)
 
-    -- Apply the CSS to the window
+    -- Apply the CSS to text_view as it needs to be transparent
     local context = text_view:get_style_context()
     context:add_provider(customCssProvider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
-
 
     local main_vertical_box_below_text_view = Gtk.Box {
         orientation = Gtk.Orientation.VERTICAL
@@ -424,16 +428,11 @@ end
     }
     hbox_for_buttons_under_entry:pack_start(font_size_spin_button, false, false, 0)
 
-    inputFontSize = font_size_spin_button.value
-
     -- Update the global variable whenever the spin button value changes
     font_size_spin_button.on_value_changed = function()
-        inputFontSize = font_size_spin_button.value
+        fontSize = font_size_spin_button.value
 
-        -- get the current zoom level of the app
-        local zoom_factor = app.getZoom()
-
-        set_font_style(text_view, inputFontSize * zoom_factor, fontName, r, g, b) -- set entry font size
+        set_font_style(text_view, fontSize * zoom_factor, fontName) -- set entry font size
     end
 
     local clear_button = Gtk.Button {
@@ -488,13 +487,13 @@ end
         label = "Close"
     }
     local ok_button = Gtk.Button {
-        label = "Insert Text"
+        label = "Insert"
     }
     local ok_pen_button = Gtk.Button {
-        label = "Insert Text & activate pen"
+        label = "Insert & activate pen"
     }
     local ok_button_rotation = Gtk.Button {
-        label = "Insert as rotation enabled Text"
+        label = "Insert as rotation enabled"
     }
 
     hbox_buttons_bottom:pack_start(cancel_button, false, false, 0)
@@ -546,35 +545,22 @@ end
         end
     end
 
-
     window:show_all()
 
-
-        -- get the current zoom level of the app
-        local zoom_factor = app.getZoom()
-
-        -- Set Initial font size and Font family (font size is multiplied by zoomFactor to show as it will appear on the document page)
-        set_font_style(text_view, inputFontSize * zoom_factor, fontName, r, g, b) -- set entry font 
-
-    -- Trigger the rectangle selection tool (at the starting of the plugin) for selecting the working textbox
-    app.uiAction({
-        action = "ACTION_TOOL_SELECT_RECT"
-    })
-
-    -- Try to get entry text and other data if any text is selected (at the starting of the plugin)
-    local status, isSelection = pcall(app.getTexts, "selection") -- Run without throwing error message if there is no selection of the text (then new text can be inserted)
-    if status and isSelection and #isSelection > 0 then
-        getText()
-        font_size_spin_button:set_value(fontSize)
-        
-    else
-        font_size_spin_button:set_value(fontSize)
+    -- Set the text of the entry field if selection
+    if selectedTextString then
+        text_buffer:set_text(selectedTextString, -1)
     end
 
-            -- Set the window At the existing text
-            window:move(78 + textPositionX * zoom_factor, 26 + textPositionY * zoom_factor)
+    -- Set Initial font size and Font family (font size is multiplied by zoomFactor to show as it will appear on the document page)
+    set_font_style(text_view, fontSize * zoom_factor, fontName) -- set entry font 
 
-    -- Function to update the position label
+    font_size_spin_button:set_value(fontSize)
+
+    -- Set the window At the existing text when it is full screen and page is scrolled to top
+    window:move(78 + textPositionX * zoom_factor, 26 + textPositionY * zoom_factor)
+
+    -- Function to update the position coordinate
     local function update_position()
         local x, y = window:get_position()
 
@@ -606,8 +592,7 @@ end
             print("The text field is empty. Please enter some text.")
         else
             insertText(inputText)
-            textPositionX, textPositionY = 50, 50 -- reset the position coordinates
-            isDeletedAndNeedToBeAdded = nil
+            isDeletedAndNeedToBeAdded = nil -- operation successful, no need to add the deleted text
             window:destroy() -- closes the main window
         end
     end
@@ -622,9 +607,9 @@ end
         if inputText == "" then
             print("The text field is empty. Please enter some text.")
         else
+            -- rotationEnabledTextHelper.processAndInsertCharacters(inputText) -- tried to separate the rotation logic, but failed
             processAndInsertCharacters(inputText)
-            textPositionX, textPositionY = 50, 50 -- reset the position coordinates
-            isDeletedAndNeedToBeAdded = nil
+            isDeletedAndNeedToBeAdded = nil -- operation successful, no need to add the deleted text
             window:destroy() -- closes the main window
         end
     end
@@ -642,8 +627,7 @@ end
             app.uiAction({
                 action = "ACTION_TOOL_PEN"
             })
-            textPositionX, textPositionY = 50, 50 -- reset the position coordinates
-            isDeletedAndNeedToBeAdded = nil
+            isDeletedAndNeedToBeAdded = nil -- operation successful, no need to add the deleted text
             window:destroy() -- closes the main window
         end
     end
