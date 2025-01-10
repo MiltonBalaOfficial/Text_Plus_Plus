@@ -659,7 +659,6 @@ end
         textPositionX, textPositionY = 50, 50 -- reset the position coordinates
         window:destroy() -- closes the main window
     end
-    window:move(0, 0)
 end
 
 --------------------------------------------Rotation enabled text------------------------------------------
