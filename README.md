@@ -21,9 +21,9 @@ Insert Text with special characters like greek letters, superscripts, subscripts
 
 ## Direction of Use
 
-1. Easy to use, after running the plugin type with the keyboard and insert special characters into the input field.
+1. Easy to use, after running the plugin type with the keyboard and insert special characters into the input field. The text will be inserted where it is seen in the plugin input field. To insert somewhere else, move the plugin window to your desired position.
 2. Once you are done insert the text as normal text or as rotation enabled text.
-3. If you edit the existing text to add special character to that, just select the text and run the plugin. If you want to edit text with this plugin while typing with `text` tool just run the plugin while typing, plugin will take the text automatically.
+3. If you edit the existing text to add special character to that, just select the text and run the plugin. If you want to edit text with this plugin while typing with `text` tool just run the plugin while typing, plugin will take the text automatically. Initially your text will be deleted, but if you close the plugin without inserting, your old text will appear again.
 4. If you want your text as rotation enabled, you can also do that. Till now this functionality only works only for normal characters and a few special characters. Keep in mind that the 'rotation enabled text' will not be normal text anymore, it will become Text Stroke!
   
 
