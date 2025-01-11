@@ -7,9 +7,9 @@ local Gdk = lgi.require("Gdk", "3.0")
 
 -- Actual values are stored to get back the stroke if the plugin is closed without inserting anything
 local ActualText, ActualFontName, ActualFontSize, ActualFontColor, ActualTextPositionX, ActualTextPositionY
-local activeTool, selectedTextString, text_view, text_buffer, fontName, fontColor, fontSize, textPositionX,
+local activeTool, selectedTextString, window, text_view, text_buffer, fontName, fontColor, fontSize, textPositionX,
     textPositionY, zoom_factor, inputText
-local isDeletedAndNeedToBeAdded
+local isDeletedAndNeedToBeAdded, isDynamicOff, DynamicOffX, DynamicOffY
 
 -- Kerning pair adjustment data for rotation enabled text
 local specialPairs = require("kerning_pairs")
@@ -31,6 +31,60 @@ function initUi()
     })
 end
 
+local function parse_font_name(font_name)
+    if not font_name or type(font_name) ~= "string" then
+        return nil, false, false, false -- Invalid input, return default values
+    end
+
+    -- Define patterns to identify bold, italic, and condensed
+    local patterns = {
+        bold_italic = "%s?[bB][oO][lL][dD]%s?[iI][tT][aA][lL][iI][cC]$",
+        bold = "%s?[bB][oO][lL][dD]$",
+        italic = "%s?[iI][tT][aA][lL][iI][cC]$",
+        condensed = "%s?[cC][oO][nN][dD][eE][nN][sS][eE][dD]$"
+    }
+
+    local is_bold = false
+    local is_italic = false
+    local is_condensed = false
+
+    -- Check for "condensed" and remove it
+    if font_name:match(patterns.condensed) then
+        is_condensed = true
+        font_name = font_name:gsub(patterns.condensed, ""):match("^%s*(.-)%s*$")
+    end
+
+    -- Check for "bold italic" first
+    if font_name:match(patterns.bold_italic) then
+        is_bold = true
+        is_italic = true
+        font_name = font_name:gsub(patterns.bold_italic, ""):match("^%s*(.-)%s*$")
+    elseif font_name:match(patterns.bold) then
+        -- Check for "bold"
+        is_bold = true
+        font_name = font_name:gsub(patterns.bold, ""):match("^%s*(.-)%s*$")
+    elseif font_name:match(patterns.italic) then
+        -- Check for "italic"
+        is_italic = true
+        font_name = font_name:gsub(patterns.italic, ""):match("^%s*(.-)%s*$")
+    end
+
+    -- Trim whitespace and return the cleaned font name and style flags
+    return font_name:match("^%s*(.-)%s*$"), is_bold, is_italic, is_condensed
+end
+
+-- Function to update the position coordinate according to window position
+function update_position()
+    local x, y = window:get_position()
+    -- the starting position of the page when fullscreen and page is scrolled to top (manually set)
+    local adjustment_x = 78
+    local adjustment_y = 26
+    local zoom_factor = app.getZoom()
+    -- calculate the coordinate wrt the page to insert the text at the same position where it is seen right now
+    textPositionX = (x - adjustment_x) / zoom_factor
+    textPositionY = (y - adjustment_y) / zoom_factor
+end
+
 function decimal_to_rgb(color)
     local r = (color >> 16) & 0xFF -- Extract the red component
     local g = (color >> 8) & 0xFF -- Extract the green component
@@ -40,6 +94,7 @@ end
 
 -- Main function to Starting
 function getInfoAndCreateWindow()
+
     -- save the active tool to reactivate at the end
     local toolInfo = app.getToolInfo("active")
     activeTool = toolInfo.type
@@ -96,7 +151,6 @@ function getText()
     ActualFontColor = firstText.color
     ActualTextPositionX = firstText.x
     ActualTextPositionY = firstText.y
-
     app.uiAction({
         action = "ACTION_DELETE"
     })
@@ -106,6 +160,16 @@ end
 
 -- Insert text from the inputfield
 function insertText(inputText, restoreTheDeletedText)
+
+    if isDynamicOff then -- If dynamic positioning is off then use the last coordinate picked
+        textPositionX = DynamicOffX
+        textPositionY = DynamicOffY
+        isDynamicOff = nil -- once inserted then again make it nil 
+    else
+        update_position() -- update the position if dynamic positioning is on
+    end
+
+
     if restoreTheDeletedText then
         local refs = app.addTexts {
             texts = {{
@@ -284,6 +348,11 @@ function createTextInputWindow()
     -- Function to set font size, font name, and color dynamically
     local css_provider = Gtk.CssProvider()
     local function set_font_style(widget, font_size, font_name)
+
+        -- Parse the font name to extract styles and cleaned name
+        local clean_name, is_bold, is_italic, is_condensed = parse_font_name(font_name)
+        fontName = clean_name
+    
         -- Format the RGB color into CSS-compatible `rgb(red, green, blue)`
         local r, g, b = decimal_to_rgb(fontColor)
         local font_color = string.format("rgb(%d, %d, %d)", r, g, b)
@@ -303,7 +372,7 @@ function createTextInputWindow()
     end
 
     -- The main Window
-    local window = Gtk.Window {
+    window = Gtk.Window {
         title = "Text⁺⁺",
         default_width = 800,
         default_height = 250,
@@ -409,6 +478,12 @@ function createTextInputWindow()
     -- Set alignment to center
     hbox_for_buttons_under_entry:set_halign(Gtk.Align.CENTER)
     vbox_under_input_right:pack_start(hbox_for_buttons_under_entry, false, false, 0)
+
+    -- Create a toggle button (on/off button)
+    local toggle_button = Gtk.ToggleButton {
+        label = "Dynamic Position On", -- Initial label
+    }
+    hbox_for_buttons_under_entry:pack_start(toggle_button, false, false, 0)
 
     -- Create OK button and other buttons at the bottom (First child of hbox_buttons_bottom)
     local font_size_label = Gtk.Label {
@@ -560,26 +635,24 @@ function createTextInputWindow()
     -- Set the window At the existing text when it is full screen and page is scrolled to top
     window:move(78 + textPositionX * zoom_factor, 26 + textPositionY * zoom_factor)
 
-    -- Function to update the position coordinate
-    local function update_position()
-        local x, y = window:get_position()
 
-        -- the starting position of the page when fullscreen and page is scrolled to top (manually set)
-        local adjustment_x = 78
-        local adjustment_y = 26
-        local zoom_factor = app.getZoom()
 
-        -- calculate the coordinate wrt the page to insert the text at the same position where it is seen right now
-        textPositionX = (x - adjustment_x) / zoom_factor
-        textPositionY = (y - adjustment_y) / zoom_factor
-    end
-
-    -- Connect to the configure-event to track position changes
-    window.on_configure_event = function(_, event)
-        -- Update the position whenever the window is moved
+-- Set the callback for the toggle button to change the label
+toggle_button.on_toggled = function(self)
+    -- Update the label when toggled
+    if self:get_active() then
+        self:set_label("Dynamic Position Off")
+        isDynamicOff = true
         update_position()
-        return false -- Continue propagation of the event
+        DynamicOffX = textPositionX
+        DynamicOffY = textPositionY
+    else
+        self:set_label("Dynamic Position On")
+        isDynamicOff = nil -- once inserted then again make it nil 
+        
     end
+end
+
 
     -- Add function to the bottom buttons
     ok_button.on_clicked = function()

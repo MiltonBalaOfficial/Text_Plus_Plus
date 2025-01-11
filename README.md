@@ -19,12 +19,26 @@ Insert Text with special characters like greek letters, superscripts, subscripts
 3. **Use the plugin** as needed
 
 
-## Direction of Use
+## Directions
 
-1. Easy to use, after running the plugin type with the keyboard and insert special characters into the input field. The text will be inserted where it is seen in the plugin input field. To insert somewhere else, move the plugin window to your desired position.
-2. Once you are done insert the text as normal text or as rotation enabled text.
-3. If you edit the existing text to add special character to that, just select the text and run the plugin. If you want to edit text with this plugin while typing with `text` tool just run the plugin while typing, plugin will take the text automatically. Initially your text will be deleted, but if you close the plugin without inserting, your old text will appear again.
-4. If you want your text as rotation enabled, you can also do that. Till now this functionality only works only for normal characters and a few special characters. Keep in mind that the 'rotation enabled text' will not be normal text anymore, it will become Text Stroke!
+1. **Easy Text Insertion**:  
+   - Run the plugin and start typing directly into the plugin’s input field.  
+   - The text will appear at the visible location of the plugin window.  
+   - To insert text elsewhere, move the plugin window to the desired position.  
+   - If the plugin window is not fully visible (e.g., due to text alignment being too far to the right), adjust the window's position to the desired position and toggle **Dynamic Position** off. Once the text is inserted, it will appear in your chosen position.
+
+2. **Normal or Rotation-Enabled Text**:  
+   - After finishing, you can insert the text as either **normal text** or **rotation-enabled text**.  
+
+3. **Editing Existing Text**:  
+   - To edit an existing text layer with special characters, select the text and then run the plugin.  
+   - If you’re actively typing with the text tool, you can still use the plugin to edit. The plugin will automatically pull the current text.  
+   - **Note**: When the plugin starts, your existing text will be temporarily deleted. However, if you close the plugin without inserting anything, the original text will reappear.  
+
+4. **Rotation-Enabled Text**:  
+   - If you want rotation-enabled text, the plugin can create it. Currently, this works for regular characters and a limited set of special characters.  
+   - Keep in mind that rotation-enabled text will not behave as standard text anymore—it will be converted to **Text Stroke**.
+
   
 
 ## Share Your Ideas!
