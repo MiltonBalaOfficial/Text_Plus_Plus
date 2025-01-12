@@ -25,7 +25,7 @@ Insert Text with special characters like greek letters, superscripts, subscripts
    - Run the plugin and start typing directly into the plugin’s input field.  
    - The text will appear at the visible location of the plugin window.  
    - To insert text elsewhere, move the plugin window to the desired position.  
-   - If the plugin window is not fully visible (e.g., due to text alignment being too far to the right), adjust the window's position to the desired position and toggle **Dynamic Position** off. Once the text is inserted, it will appear in your chosen position.
+   - If the plugin window is not fully visible (e.g., due to text alignment being too far to the right), adjust the window's position to the desired position and toggle **Set Position** on. Once the text is inserted, it will appear in your chosen position.
 
 2. **Normal or Rotation-Enabled Text**:  
    - After finishing, you can insert the text as either **normal text** or **rotation-enabled text**.  

@@ -4,6 +4,8 @@ local utf8 = require("utf8")
 local lgi = require("lgi")
 local Gtk = lgi.require("Gtk", "3.0")
 local Gdk = lgi.require("Gdk", "3.0")
+local Pango = lgi.Pango -- Font selection and font color view
+local PangoCairo = lgi.PangoCairo
 
 -- Actual values are stored to get back the stroke if the plugin is closed without inserting anything
 local ActualText, ActualFontName, ActualFontSize, ActualFontColor, ActualTextPositionX, ActualTextPositionY
@@ -31,7 +33,8 @@ function initUi()
     })
 end
 
-local function parse_font_name(font_name)
+-- Xournal++ font names are with bold/italic, so it need to be removed
+function parse_font_name(font_name)
     if not font_name or type(font_name) ~= "string" then
         return nil, false, false, false -- Invalid input, return default values
     end
@@ -77,8 +80,8 @@ end
 function update_position()
     local x, y = window:get_position()
     -- the starting position of the page when fullscreen and page is scrolled to top (manually set)
-    local adjustment_x = 78
-    local adjustment_y = 26
+    local adjustment_x = 88
+    local adjustment_y = 3
     local zoom_factor = app.getZoom()
     -- calculate the coordinate wrt the page to insert the text at the same position where it is seen right now
     textPositionX = (x - adjustment_x) / zoom_factor
@@ -92,38 +95,16 @@ function decimal_to_rgb(color)
     return r, g, b
 end
 
--- Main function to Starting
-function getInfoAndCreateWindow()
-
-    -- save the active tool to reactivate at the end
-    local toolInfo = app.getToolInfo("active")
-    activeTool = toolInfo.type
-
-    -- Get the Text tool font and font size, if any selected text found then fontName and size will be updated later from it.
-    local textTool = app.getToolInfo("text")
-    fontName = textTool.font.name
-    fontSize = textTool.font.size
-    fontColor = textTool.color
-
-    -- Set a starting coordinate
-    textPositionX, textPositionY = 0, 0
-
-    -- Trigger the rectangle selection tool (at the starting of the plugin) for selecting the working textbox
-    app.uiAction({
-        action = "ACTION_TOOL_SELECT_RECT"
-    })
-
-    -- Try to get entry text and other data if any text is selected (at the starting of the plugin)
-    local status, isSelection = pcall(app.getTexts, "selection") -- Run without throwing error message if there is no selection of the text (then new text can be inserted)
-    if status and isSelection and #isSelection > 0 then
-        getText()
+-- Function to get a sorted list of fonts
+local function get_sorted_font_list()
+    local context = PangoCairo.FontMap.get_default():create_context()
+    local families = context:list_families()
+    local font_names = {}
+    for _, family in ipairs(families) do
+        table.insert(font_names, family.name)
     end
-
-    -- get the current zoom level of the app
-    zoom_factor = app.getZoom()
-
-    -- Start the input window
-    createTextInputWindow()
+    table.sort(font_names) -- Sort font names alphabetically
+    return font_names
 end
 
 -- Gets the text from the selection
@@ -158,9 +139,41 @@ function getText()
 
 end
 
+-- Main function to Starting
+function getInfoAndCreateWindow()
+    -- save the active tool to reactivate at the end
+    local toolInfo = app.getToolInfo("active")
+    activeTool = toolInfo.type
+
+    -- Get the Text tool font and font size, if any selected text found then fontName and size will be updated later from it.
+    local textTool = app.getToolInfo("text")
+    fontName = textTool.font.name
+    fontSize = textTool.font.size
+    fontColor = textTool.color
+
+    -- Set a starting coordinate
+    textPositionX, textPositionY = 15, 15
+
+    -- Trigger the rectangle selection tool (at the starting of the plugin) for selecting the working textbox
+    app.uiAction({
+        action = "ACTION_TOOL_SELECT_RECT"
+    })
+
+    -- Try to get entry text and other data if any text is selected (at the starting of the plugin)
+    local status, isSelection = pcall(app.getTexts, "selection") -- Run without throwing error message if there is no selection of the text (then new text can be inserted)
+    if status and isSelection and #isSelection > 0 then
+        getText()
+    end
+    fontName = fontName
+    -- get the current zoom level of the app
+    zoom_factor = app.getZoom()
+
+    -- Start the input window
+    createTextInputWindow()
+end
+
 -- Insert text from the inputfield
 function insertText(inputText, restoreTheDeletedText)
-
     if isDynamicOff then -- If dynamic positioning is off then use the last coordinate picked
         textPositionX = DynamicOffX
         textPositionY = DynamicOffY
@@ -168,7 +181,6 @@ function insertText(inputText, restoreTheDeletedText)
     else
         update_position() -- update the position if dynamic positioning is on
     end
-
 
     if restoreTheDeletedText then
         local refs = app.addTexts {
@@ -183,7 +195,7 @@ function insertText(inputText, restoreTheDeletedText)
                 y = ActualTextPositionY
             }}
         }
-        app.addToSelection(refs)
+        -- app.addToSelection(refs)
         app.refreshPage()
     else
         local refs = app.addTexts {
@@ -198,7 +210,7 @@ function insertText(inputText, restoreTheDeletedText)
                 y = textPositionY
             }}
         }
-        app.addToSelection(refs)
+        -- app.addToSelection(refs)
         app.refreshPage()
 
         -- Switch to the previously active tool so that work could be continued
@@ -328,7 +340,7 @@ function createTextInputWindow()
 
         window {
             background-color: transparent;
-            border: 10px solid rgba(50, 50, 50, 1);
+            /*border: 10px solid rgba(50, 50, 50, 1);*/
         }
 
         textview {
@@ -352,7 +364,7 @@ function createTextInputWindow()
         -- Parse the font name to extract styles and cleaned name
         local clean_name, is_bold, is_italic, is_condensed = parse_font_name(font_name)
         fontName = clean_name
-    
+
         -- Format the RGB color into CSS-compatible `rgb(red, green, blue)`
         local r, g, b = decimal_to_rgb(fontColor)
         local font_color = string.format("rgb(%d, %d, %d)", r, g, b)
@@ -371,12 +383,65 @@ function createTextInputWindow()
         context:add_provider(css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
     end
 
+    -- Full color list with decimal values
+    local colors = {{16711680, "red"}, -- 16711680 corresponds to 0xff0000
+    {255, "blue"}, -- 255 corresponds to 0x0000FF
+    {32768, "green"}, -- 32768 corresponds to 0x008000
+    {16744448, "orange"}, -- 16744448 corresponds to 0xff8000
+    {16711935, "magenta"}, -- 16711935 corresponds to 0xff00ff
+    {49407, "lightblue"}, -- 49407 corresponds to 0x00c0ff
+    {65280, "lightgreen"}, -- 65280 corresponds to 0x00ff00
+    {16776960, "yellow"}, -- 16776960 corresponds to 0xffff00
+    {8421504, "gray"}, -- 8421504 corresponds to 0x808080
+    {0, "black"}, -- 0 corresponds to 0x000000
+    {16777215, "white"} -- 16777215 corresponds to 0xffffff
+    }
+
+    -- Find the index of the initial color in the colors list
+    local color_index = 1
+    for i, color in ipairs(colors) do
+        if color[1] == fontColor then
+            color_index = i
+            break
+        end
+    end
+
+    -- Function to update the color
+    function update_color(drawing_area)
+        local cr = drawing_area:get_window():cairo_create()
+        local color = Gdk.RGBA()
+        color:parse(string.format("#%06x", colors[color_index][1])) -- Convert decimal to hex
+        cr:set_source_rgba(color.red, color.green, color.blue, color.alpha)
+        cr:arc(15, 15, 10, 0, 2 * math.pi) -- Circle matches button size
+        cr:fill()
+
+        -- Add a black border around the circle
+        cr:set_source_rgb(0, 0, 0) -- Black color for the border
+        cr:set_line_width(1) -- Border thickness
+        cr:arc(15, 15, 10, 0, 2 * math.pi) -- Draw border circle
+        cr:stroke() -- Apply the border
+    end
+
+    -- Function to change color
+    function change_color(direction)
+        color_index = color_index + direction
+        if color_index > #colors then
+            color_index = 1
+        elseif color_index < 1 then
+            color_index = #colors
+        end
+
+        -- Update fontColor as a decimal value
+        fontColor = colors[color_index][1]
+        set_font_style(text_view, fontSize * zoom_factor, fontName) -- set entry font size
+    end
+
     -- The main Window
     window = Gtk.Window {
         title = "Text⁺⁺",
-        default_width = 800,
+        default_width = 850,
         default_height = 250,
-        border_width = 10,
+        -- border_width = 20,
         on_destroy = function()
             if isDeletedAndNeedToBeAdded then -- Check if the window is closed without inserting the text, if so then add the deleted text to ensure no action.
                 insertText(nil, true)
@@ -397,11 +462,47 @@ function createTextInputWindow()
     }
     window:add(main_vertical_layout_box)
 
+    -- Create a horizontal box for buttons at the bottom (First child of vbox_under_input_right)
+    local hbox_for_top_buttons = Gtk.Box {
+        orientation = Gtk.Orientation.HORIZONTAL,
+        spacing = 10 -- Add some space between buttons
+    }
+    main_vertical_layout_box:pack_start(hbox_for_top_buttons, false, true, 0) -- vertically expand false
+
+    -- Apply the CSS to the middle container
+    local context = hbox_for_top_buttons:get_style_context()
+    context:add_provider(customCssProvider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
+
+    -- Create a toggle button (on/off button)
+    local dynamic_position_toggle_button = Gtk.ToggleButton {
+        label = "Set Position" -- Initial label
+    }
+
+    -- Create OK button and other buttons at the bottom (First child of hbox_buttons_bottom)
+    local cancel_button = Gtk.Button {
+        label = "Close Window"
+    }
+    local ok_button = Gtk.Button {
+        label = "Insert"
+    }
+    local ok_pen_button = Gtk.Button {
+        label = "Insert & activate pen"
+    }
+    local ok_button_rotation = Gtk.Button {
+        label = "Insert as rotation enabled"
+    }
+
+    hbox_for_top_buttons:pack_start(dynamic_position_toggle_button, false, false, 0)
+    hbox_for_top_buttons:pack_start(cancel_button, false, false, 0)
+    hbox_for_top_buttons:pack_start(ok_pen_button, false, false, 0)
+    hbox_for_top_buttons:pack_start(ok_button_rotation, false, false, 0)
+    hbox_for_top_buttons:pack_start(ok_button, false, false, 0)
+
     -- Create a scrollable text view
     local scrolled_window_for_entry = Gtk.ScrolledWindow {
         hscrollbar_policy = Gtk.PolicyType.AUTOMATIC,
         vscrollbar_policy = Gtk.PolicyType.AUTOMATIC,
-        height_request = 200
+        height_request = 250
     }
 
     -- Create the Entry field (it is set as global as it needs to be modified time to time)
@@ -415,9 +516,11 @@ function createTextInputWindow()
     context:add_provider(customCssProvider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
 
     local main_vertical_box_below_text_view = Gtk.Box {
-        orientation = Gtk.Orientation.VERTICAL
+        orientation = Gtk.Orientation.VERTICAL,
+        hexpand = true,
+        vexpand = false -- Prevent the lower box from expanding vertically
     }
-    main_vertical_layout_box:pack_end(main_vertical_box_below_text_view, true, true, 0)
+    main_vertical_layout_box:pack_start(main_vertical_box_below_text_view, false, true, 0)
 
     -- Apply the CSS to the middle container
     local context = main_vertical_box_below_text_view:get_style_context()
@@ -434,7 +537,7 @@ function createTextInputWindow()
         orientation = Gtk.Orientation.HORIZONTAL,
         spacing = 10 -- Add some space between buttons
     }
-    main_vertical_box_below_text_view:pack_end(hbox_middle_of_main_vbox, true, true, 0)
+    main_vertical_box_below_text_view:pack_start(hbox_middle_of_main_vbox, false, true, 0)
 
     -- Create a vertical box at the left part of hbox_middle_of_main_vbox (First child of hbox_middle_of_main_vbox)
     local vbox_under_input_left = Gtk.Box {
@@ -475,21 +578,33 @@ function createTextInputWindow()
         orientation = Gtk.Orientation.HORIZONTAL,
         spacing = 10 -- Add some space between buttons
     }
-    -- Set alignment to center
-    hbox_for_buttons_under_entry:set_halign(Gtk.Align.CENTER)
-    vbox_under_input_right:pack_start(hbox_for_buttons_under_entry, false, false, 0)
+    vbox_under_input_right:pack_start(hbox_for_buttons_under_entry, false, true, 0) -- vertically expand false
 
-    -- Create a toggle button (on/off button)
-    local toggle_button = Gtk.ToggleButton {
-        label = "Dynamic Position On", -- Initial label
+    -- Create buttons with more descriptive names
+    local font_color_backward_button = Gtk.Button {
+        label = "≪"
     }
-    hbox_for_buttons_under_entry:pack_start(toggle_button, false, false, 0)
 
-    -- Create OK button and other buttons at the bottom (First child of hbox_buttons_bottom)
-    local font_size_label = Gtk.Label {
-        label = "Font Size:"
+    -- Add the circle to a vertical box for alignment
+    local circle_box = Gtk.Box {
+        orientation = Gtk.Orientation.VERTICAL
     }
-    hbox_for_buttons_under_entry:pack_start(font_size_label, false, false, 0)
+
+    -- Create a drawing area for the color display
+    local color_display = Gtk.DrawingArea {
+        width = 30,
+        height = 30,
+        on_draw = update_color
+    }
+    circle_box:pack_start(color_display, true, false, 0)
+
+    local font_color_forward_button = Gtk.Button {
+        label = "≫"
+    }
+
+    hbox_for_buttons_under_entry:pack_start(font_color_backward_button, false, false, 0)
+    hbox_for_buttons_under_entry:pack_start(circle_box, false, false, 0)
+    hbox_for_buttons_under_entry:pack_start(font_color_forward_button, false, false, 0)
 
     local font_size_spin_button = Gtk.SpinButton { -- font increase decrease field
         adjustment = Gtk.Adjustment {
@@ -503,21 +618,30 @@ function createTextInputWindow()
     }
     hbox_for_buttons_under_entry:pack_start(font_size_spin_button, false, false, 0)
 
-    -- Update the global variable whenever the spin button value changes
-    font_size_spin_button.on_value_changed = function()
-        fontSize = font_size_spin_button.value
+    -- Create a label for the button
+    local open_button_label = Gtk.Label {
+        label = "<span font_family='" .. fontName .. "' font_size='13000'>" .. fontName .. "</span>",
+        use_markup = true, -- Enable Pango markup
+        xalign = 0, -- Align text to the left
+        width_request = 250,
+        height_request = 20
+    }
 
-        set_font_style(text_view, fontSize * zoom_factor, fontName) -- set entry font size
-    end
+    -- Create the button and add the label as its child
+    local font_list_open_button = Gtk.Button {}
+    font_list_open_button:add(open_button_label)
+    hbox_for_buttons_under_entry:pack_start(font_list_open_button, false, false, 0)
 
     local clear_button = Gtk.Button {
         label = "Clear All"
     }
     hbox_for_buttons_under_entry:pack_start(clear_button, false, false, 0)
 
-    -- Create horizontal separator (second child of vbox_under_input_right)
+    -- Create horizontal separator 
     local horizontal_separator_above_symbol_grid = Gtk.Separator {
-        orientation = Gtk.Orientation.HORIZONTAL
+        orientation = Gtk.Orientation.HORIZONTAL,
+        margin_top = 5,
+        margin_bottom = 5
     }
     vbox_under_input_right:pack_start(horizontal_separator_above_symbol_grid, false, false, 0)
 
@@ -529,7 +653,7 @@ function createTextInputWindow()
     }
     scrolled_window:set_direction(Gtk.TextDirection.RTL) -- Place the scrollbar at the left
 
-    -- Create a grid to hold the symbol buttons (Third child of vbox_under_input_right)
+    -- Create a grid to hold the symbol buttons 
     local symbol_grid = Gtk.Grid {
         column_homogeneous = true, -- Make columns have the same width
         column_spacing = 10, -- Space between columns
@@ -541,40 +665,6 @@ function createTextInputWindow()
     }
     scrolled_window:add(symbol_grid)
     vbox_under_input_right:pack_start(scrolled_window, true, true, 0)
-
-    -- Create horizontal separator (Fourth child of vbox_under_input_right)
-    local horizontal_separator_above_Ok_button = Gtk.Separator {
-        orientation = Gtk.Orientation.HORIZONTAL
-    }
-    vbox_under_input_right:pack_start(horizontal_separator_above_Ok_button, false, false, 0)
-
-    -- Create a horizontal box for buttons at the bottom (Fifth child of vbox_under_input_right)
-    local hbox_buttons_bottom = Gtk.Box {
-        orientation = Gtk.Orientation.HORIZONTAL,
-        spacing = 10 -- Add some space between buttons
-    }
-    -- Set alignment to center
-    hbox_buttons_bottom:set_halign(Gtk.Align.CENTER)
-    vbox_under_input_right:pack_end(hbox_buttons_bottom, false, false, 0)
-
-    -- Create OK button and other buttons at the bottom (First child of hbox_buttons_bottom)
-    local cancel_button = Gtk.Button {
-        label = "Close"
-    }
-    local ok_button = Gtk.Button {
-        label = "Insert"
-    }
-    local ok_pen_button = Gtk.Button {
-        label = "Insert & activate pen"
-    }
-    local ok_button_rotation = Gtk.Button {
-        label = "Insert as rotation enabled"
-    }
-
-    hbox_buttons_bottom:pack_start(cancel_button, false, false, 0)
-    hbox_buttons_bottom:pack_start(ok_pen_button, false, false, 0)
-    hbox_buttons_bottom:pack_start(ok_button_rotation, false, false, 0)
-    hbox_buttons_bottom:pack_start(ok_button, false, false, 0)
 
     -- Update the symbol_grid with the initial category symbols at the starting
     updateSymbolButtons(symbolDictionary[1].texts, symbol_grid)
@@ -620,6 +710,71 @@ function createTextInputWindow()
         end
     end
 
+
+
+    -- Create the subwindow for font selection
+    local subwindow = Gtk.Window {
+        title = "Select a Font",
+        default_width = 400,
+        default_height = 300,
+        transient_for = window,
+        modal = true
+    }
+
+    -- Subwindow layout
+    local font_list = Gtk.ListBox {}
+    local font_list_container = Gtk.ScrolledWindow {
+        vexpand = true,
+        hexpand = true,
+        child = font_list
+    }
+    subwindow:add(font_list_container)
+    
+    -- Populate the font list
+    local fonts = get_sorted_font_list()
+    for _, font_name in ipairs(fonts) do
+        local row = Gtk.ListBoxRow {}
+        local label = Gtk.Label {
+            label = font_name,
+            xalign = 0
+        }
+
+        -- Apply the font style to each label in the font list using markup
+        label:set_text(font_name) -- Store the plain font name
+        label:set_markup("<span font_family='" .. font_name .. "' font_size='12000'>" .. font_name .. "</span>") -- Display styled font name
+
+        row:add(label)
+        font_list:insert(row, -1)
+    end
+    font_list:show_all()
+
+    -- Connect the button to open the subwindow
+    font_list_open_button.on_clicked = function()
+        subwindow:show_all() -- Show the subwindow
+    end
+
+    -- Handle font selection
+    font_list.on_row_activated = function(list, row)
+        local label_widget = row:get_child() -- Get the label widget
+        local font_name = label_widget:get_text() -- Retrieve the plain font name
+
+        fontName = font_name -- Update the global active font name
+
+        open_button_label:set_markup(
+            "<span font_family='" .. fontName .. "' font_size='13000'>" .. fontName .. "</span>")
+
+        subwindow:hide() -- Close the subwindow after selection
+        fontName = fontName
+        set_font_style(text_view, fontSize * zoom_factor, fontName) -- set entry font size
+    end
+
+    window:add(subwindow)
+
+    subwindow.on_delete_event = function()
+        subwindow:hide()
+        return true -- Prevent default close behavior
+    end
+
     window:show_all()
 
     -- Set the text of the entry field if selection
@@ -633,26 +788,23 @@ function createTextInputWindow()
     font_size_spin_button:set_value(fontSize)
 
     -- Set the window At the existing text when it is full screen and page is scrolled to top
-    window:move(78 + textPositionX * zoom_factor, 26 + textPositionY * zoom_factor)
+    window:move(88 + textPositionX * zoom_factor, 3 + textPositionY * zoom_factor)
 
+    -- Set the callback for the toggle button to change the label
+    dynamic_position_toggle_button.on_toggled = function(self)
+        -- Update the label when toggled
+        if self:get_active() then
+            self:set_label("Position fixed")
+            isDynamicOff = true
+            update_position()
+            DynamicOffX = textPositionX
+            DynamicOffY = textPositionY
+        else
+            self:set_label("Set Position")
+            isDynamicOff = nil -- once inserted then again make it nil 
 
-
--- Set the callback for the toggle button to change the label
-toggle_button.on_toggled = function(self)
-    -- Update the label when toggled
-    if self:get_active() then
-        self:set_label("Dynamic Position Off")
-        isDynamicOff = true
-        update_position()
-        DynamicOffX = textPositionX
-        DynamicOffY = textPositionY
-    else
-        self:set_label("Dynamic Position On")
-        isDynamicOff = nil -- once inserted then again make it nil 
-        
+        end
     end
-end
-
 
     -- Add function to the bottom buttons
     ok_button.on_clicked = function()
@@ -704,6 +856,12 @@ end
             window:destroy() -- closes the main window
         end
     end
+    -- Update the global variable whenever the spin button value changes
+    font_size_spin_button.on_value_changed = function()
+        fontSize = font_size_spin_button.value
+
+        set_font_style(text_view, fontSize * zoom_factor, fontName) -- set entry font size
+    end
 
     clear_button.on_clicked = function()
         text_buffer:set_text("", -1)
@@ -716,8 +874,17 @@ end
         textPositionX, textPositionY = 50, 50 -- reset the position coordinates
         window:destroy() -- closes the main window
     end
-end
 
+    font_color_backward_button.on_clicked = function()
+        change_color(-1)
+
+    end -- Set on_clicked event
+
+    font_color_forward_button.on_clicked = function()
+        change_color(1)
+
+    end -- Set on_clicked event
+end
 --------------------------------------------Rotation enabled text------------------------------------------
 
 -- Finds the maximum X-coordinate in a set of strokes.

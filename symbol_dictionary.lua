@@ -64,53 +64,53 @@ local symbolDictionary = {
         category = "Superscripts",
         texts = {
             -- Symbols
-            [1] = { dialogText = "⬚°", textSymbol = "°" }, -- Degree
-            [2] = { dialogText = "⬚′", textSymbol = "′" }, -- Prime
-            [3] = { dialogText = "⬚″", textSymbol = "″" }, -- Double Prime
-            [4] = { dialogText = "⬚‴", textSymbol = "‴" }, -- Triple Prime
-            [5] = { dialogText = "⬚⁺", textSymbol = "⁺" }, -- Superscript Plus
-            [6] = { dialogText = "⬚⁻", textSymbol = "⁻" }, -- Superscript Minus
-            [7] = { dialogText = "⬚⁼", textSymbol = "⁼" }, -- Superscript Equals
-            [8] = { dialogText = "⬚⁽", textSymbol = "⁽" }, -- Superscript Left Parenthesis
-            [9] = { dialogText = "⬚⁾", textSymbol = "⁾" }, -- Superscript Right Parenthesis
+            [1] = { dialogText = "▢°", textSymbol = "°" }, -- Degree
+            [2] = { dialogText = "▢′", textSymbol = "′" }, -- Prime
+            [3] = { dialogText = "▢″", textSymbol = "″" }, -- Double Prime
+            [4] = { dialogText = "▢‴", textSymbol = "‴" }, -- Triple Prime
+            [5] = { dialogText = "▢⁺", textSymbol = "⁺" }, -- Superscript Plus
+            [6] = { dialogText = "▢⁻", textSymbol = "⁻" }, -- Superscript Minus
+            [7] = { dialogText = "▢⁼", textSymbol = "⁼" }, -- Superscript Equals
+            [8] = { dialogText = "▢⁽", textSymbol = "⁽" }, -- Superscript Left Parenthesis
+            [9] = { dialogText = "▢⁾", textSymbol = "⁾" }, -- Superscript Right Parenthesis
         
             -- Digits
-            [10] = { dialogText = "⬚⁰", textSymbol = "⁰" }, -- Superscript 0
-            [11] = { dialogText = "⬚¹", textSymbol = "¹" }, -- Superscript 1
-            [12] = { dialogText = "⬚²", textSymbol = "²" }, -- Superscript 2
-            [13] = { dialogText = "⬚³", textSymbol = "³" }, -- Superscript 3
-            [14] = { dialogText = "⬚⁴", textSymbol = "⁴" }, -- Superscript 4
-            [15] = { dialogText = "⬚⁵", textSymbol = "⁵" }, -- Superscript 5
-            [16] = { dialogText = "⬚⁶", textSymbol = "⁶" }, -- Superscript 6
-            [17] = { dialogText = "⬚⁷", textSymbol = "⁷" }, -- Superscript 7
-            [18] = { dialogText = "⬚⁸", textSymbol = "⁸" }, -- Superscript 8
-            [19] = { dialogText = "⬚⁹", textSymbol = "⁹" }, -- Superscript 9
+            [10] = { dialogText = "▢⁰", textSymbol = "⁰" }, -- Superscript 0
+            [11] = { dialogText = "▢¹", textSymbol = "¹" }, -- Superscript 1
+            [12] = { dialogText = "▢²", textSymbol = "²" }, -- Superscript 2
+            [13] = { dialogText = "▢³", textSymbol = "³" }, -- Superscript 3
+            [14] = { dialogText = "▢⁴", textSymbol = "⁴" }, -- Superscript 4
+            [15] = { dialogText = "▢⁵", textSymbol = "⁵" }, -- Superscript 5
+            [16] = { dialogText = "▢⁶", textSymbol = "⁶" }, -- Superscript 6
+            [17] = { dialogText = "▢⁷", textSymbol = "⁷" }, -- Superscript 7
+            [18] = { dialogText = "▢⁸", textSymbol = "⁸" }, -- Superscript 8
+            [19] = { dialogText = "▢⁹", textSymbol = "⁹" }, -- Superscript 9
         
             -- Alphabet
-            [20] = { dialogText = "⬚ᵃ", textSymbol = "ᵃ" }, -- Superscript 'a'
-            [21] = { dialogText = "⬚ᵇ", textSymbol = "ᵇ" }, -- Superscript 'b'
-            [22] = { dialogText = "⬚ᶜ", textSymbol = "ᶜ" }, -- Superscript 'c'
-            [23] = { dialogText = "⬚ᵈ", textSymbol = "ᵈ" }, -- Superscript 'd'
-            [24] = { dialogText = "⬚ᵉ", textSymbol = "ᵉ" }, -- Superscript 'e'
-            [25] = { dialogText = "⬚ᶠ", textSymbol = "ᶠ" }, -- Superscript 'f'
-            [26] = { dialogText = "⬚ᵍ", textSymbol = "ᵍ" }, -- Superscript 'g'
-            [27] = { dialogText = "⬚ʰ", textSymbol = "ʰ" }, -- Superscript 'h'
-            [28] = { dialogText = "⬚ᶦ", textSymbol = "ᶦ" }, -- Superscript 'i'
-            [29] = { dialogText = "⬚ʲ", textSymbol = "ʲ" }, -- Superscript 'j'
-            [30] = { dialogText = "⬚ᶫ", textSymbol = "ᶫ" }, -- Superscript 'l'
-            [31] = { dialogText = "⬚ᵐ", textSymbol = "ᵐ" }, -- Superscript 'm'
-            [32] = { dialogText = "⬚ⁿ", textSymbol = "ⁿ" }, -- Superscript 'n'
-            [33] = { dialogText = "⬚ᵒ", textSymbol = "ᵒ" }, -- Superscript 'o'
-            [34] = { dialogText = "⬚ᵖ", textSymbol = "ᵖ" }, -- Superscript 'p'
-            [35] = { dialogText = "⬚ʳ", textSymbol = "ʳ" }, -- Superscript 'r'
-            [36] = { dialogText = "⬚ˢ", textSymbol = "ˢ" }, -- Superscript 's'
-            [37] = { dialogText = "⬚ᵗ", textSymbol = "ᵗ" }, -- Superscript 't'
-            [38] = { dialogText = "⬚ᵘ", textSymbol = "ᵘ" }, -- Superscript 'u'
-            [39] = { dialogText = "⬚ᵛ", textSymbol = "ᵛ" }, -- Superscript 'v'
-            [40] = { dialogText = "⬚ʷ", textSymbol = "ʷ" }, -- Superscript 'w'
-            [41] = { dialogText = "⬚ˣ", textSymbol = "ˣ" }, -- Superscript 'x'
-            [42] = { dialogText = "⬚ʸ", textSymbol = "ʸ" }, -- Superscript 'y'
-            [43] = { dialogText = "⬚ᶻ", textSymbol = "ᶻ" }, -- Superscript 'z'
+            [20] = { dialogText = "▢ᵃ", textSymbol = "ᵃ" }, -- Superscript 'a'
+            [21] = { dialogText = "▢ᵇ", textSymbol = "ᵇ" }, -- Superscript 'b'
+            [22] = { dialogText = "▢ᶜ", textSymbol = "ᶜ" }, -- Superscript 'c'
+            [23] = { dialogText = "▢ᵈ", textSymbol = "ᵈ" }, -- Superscript 'd'
+            [24] = { dialogText = "▢ᵉ", textSymbol = "ᵉ" }, -- Superscript 'e'
+            [25] = { dialogText = "▢ᶠ", textSymbol = "ᶠ" }, -- Superscript 'f'
+            [26] = { dialogText = "▢ᵍ", textSymbol = "ᵍ" }, -- Superscript 'g'
+            [27] = { dialogText = "▢ʰ", textSymbol = "ʰ" }, -- Superscript 'h'
+            [28] = { dialogText = "▢ᶦ", textSymbol = "ᶦ" }, -- Superscript 'i'
+            [29] = { dialogText = "▢ʲ", textSymbol = "ʲ" }, -- Superscript 'j'
+            [30] = { dialogText = "▢ᶫ", textSymbol = "ᶫ" }, -- Superscript 'l'
+            [31] = { dialogText = "▢ᵐ", textSymbol = "ᵐ" }, -- Superscript 'm'
+            [32] = { dialogText = "▢ⁿ", textSymbol = "ⁿ" }, -- Superscript 'n'
+            [33] = { dialogText = "▢ᵒ", textSymbol = "ᵒ" }, -- Superscript 'o'
+            [34] = { dialogText = "▢ᵖ", textSymbol = "ᵖ" }, -- Superscript 'p'
+            [35] = { dialogText = "▢ʳ", textSymbol = "ʳ" }, -- Superscript 'r'
+            [36] = { dialogText = "▢ˢ", textSymbol = "ˢ" }, -- Superscript 's'
+            [37] = { dialogText = "▢ᵗ", textSymbol = "ᵗ" }, -- Superscript 't'
+            [38] = { dialogText = "▢ᵘ", textSymbol = "ᵘ" }, -- Superscript 'u'
+            [39] = { dialogText = "▢ᵛ", textSymbol = "ᵛ" }, -- Superscript 'v'
+            [40] = { dialogText = "▢ʷ", textSymbol = "ʷ" }, -- Superscript 'w'
+            [41] = { dialogText = "▢ˣ", textSymbol = "ˣ" }, -- Superscript 'x'
+            [42] = { dialogText = "▢ʸ", textSymbol = "ʸ" }, -- Superscript 'y'
+            [43] = { dialogText = "▢ᶻ", textSymbol = "ᶻ" }, -- Superscript 'z'
         },
         
     },
@@ -118,43 +118,43 @@ local symbolDictionary = {
         category = "Subscripts",
         texts = {
             -- Symbols
-            [1] = { dialogText = "⬚₊", textSymbol = "₊" }, -- Subscript Plus
-            [2] = { dialogText = "⬚₋", textSymbol = "₋" }, -- Subscript Minus
-            [3] = { dialogText = "⬚₌", textSymbol = "₌" }, -- Subscript Equals
-            [4] = { dialogText = "⬚₍", textSymbol = "₍" }, -- Subscript Left Parenthesis
-            [5] = { dialogText = "⬚₎", textSymbol = "₎" }, -- Subscript Right Parenthesis
+            [1] = { dialogText = "▢₊", textSymbol = "₊" }, -- Subscript Plus
+            [2] = { dialogText = "▢₋", textSymbol = "₋" }, -- Subscript Minus
+            [3] = { dialogText = "▢₌", textSymbol = "₌" }, -- Subscript Equals
+            [4] = { dialogText = "▢₍", textSymbol = "₍" }, -- Subscript Left Parenthesis
+            [5] = { dialogText = "▢₎", textSymbol = "₎" }, -- Subscript Right Parenthesis
         
             -- Digits
-            [6] = { dialogText = "⬚₀", textSymbol = "₀" }, -- Subscript 0
-            [7] = { dialogText = "⬚₁", textSymbol = "₁" }, -- Subscript 1
-            [8] = { dialogText = "⬚₂", textSymbol = "₂" }, -- Subscript 2
-            [9] = { dialogText = "⬚₃", textSymbol = "₃" }, -- Subscript 3
-            [10] = { dialogText = "⬚₄", textSymbol = "₄" }, -- Subscript 4
-            [11] = { dialogText = "⬚₅", textSymbol = "₅" }, -- Subscript 5
-            [12] = { dialogText = "⬚₆", textSymbol = "₆" }, -- Subscript 6
-            [13] = { dialogText = "⬚₇", textSymbol = "₇" }, -- Subscript 7
-            [14] = { dialogText = "⬚₈", textSymbol = "₈" }, -- Subscript 8
-            [15] = { dialogText = "⬚₉", textSymbol = "₉" }, -- Subscript 9
+            [6] = { dialogText = "▢₀", textSymbol = "₀" }, -- Subscript 0
+            [7] = { dialogText = "▢₁", textSymbol = "₁" }, -- Subscript 1
+            [8] = { dialogText = "▢₂", textSymbol = "₂" }, -- Subscript 2
+            [9] = { dialogText = "▢₃", textSymbol = "₃" }, -- Subscript 3
+            [10] = { dialogText = "▢₄", textSymbol = "₄" }, -- Subscript 4
+            [11] = { dialogText = "▢₅", textSymbol = "₅" }, -- Subscript 5
+            [12] = { dialogText = "▢₆", textSymbol = "₆" }, -- Subscript 6
+            [13] = { dialogText = "▢₇", textSymbol = "₇" }, -- Subscript 7
+            [14] = { dialogText = "▢₈", textSymbol = "₈" }, -- Subscript 8
+            [15] = { dialogText = "▢₉", textSymbol = "₉" }, -- Subscript 9
         
             -- Alphabet
-            [16] = { dialogText = "⬚ₐ", textSymbol = "ₐ" }, -- Subscript 'a'
-            [17] = { dialogText = "⬚ₑ", textSymbol = "ₑ" }, -- Subscript 'e'
-            [18] = { dialogText = "⬚ₕ", textSymbol = "ₕ" }, -- Subscript 'h'
-            [19] = { dialogText = "⬚ᵢ", textSymbol = "ᵢ" }, -- Subscript 'i'
-            [20] = { dialogText = "⬚ⱼ", textSymbol = "ⱼ" }, -- Subscript 'j'
-            [21] = { dialogText = "⬚ₖ", textSymbol = "ₖ" }, -- Subscript 'k'
-            [22] = { dialogText = "⬚ₗ", textSymbol = "ₗ" }, -- Subscript 'l'
-            [23] = { dialogText = "⬚ₘ", textSymbol = "ₘ" }, -- Subscript 'm'
-            [24] = { dialogText = "⬚ₙ", textSymbol = "ₙ" }, -- Subscript 'n'
-            [25] = { dialogText = "⬚ₒ", textSymbol = "ₒ" }, -- Subscript 'o'
-            [26] = { dialogText = "⬚ₚ", textSymbol = "ₚ" }, -- Subscript 'p'
-            [27] = { dialogText = "⬚ᵣ", textSymbol = "ᵣ" }, -- Subscript 'r'
-            [28] = { dialogText = "⬚ₛ", textSymbol = "ₛ" }, -- Subscript 's'
-            [29] = { dialogText = "⬚ₜ", textSymbol = "ₜ" }, -- Subscript 't'
-            [30] = { dialogText = "⬚ᵤ", textSymbol = "ᵤ" }, -- Subscript 'u'
-            [31] = { dialogText = "⬚ᵥ", textSymbol = "ᵥ" }, -- Subscript 'v'
-            [32] = { dialogText = "⬚ₓ", textSymbol = "ₓ" }, -- Subscript 'x'
-            [33] = { dialogText = "⬚ᵧ", textSymbol = "ᵧ" }, -- Subscript 'y'
+            [16] = { dialogText = "▢ₐ", textSymbol = "ₐ" }, -- Subscript 'a'
+            [17] = { dialogText = "▢ₑ", textSymbol = "ₑ" }, -- Subscript 'e'
+            [18] = { dialogText = "▢ₕ", textSymbol = "ₕ" }, -- Subscript 'h'
+            [19] = { dialogText = "▢ᵢ", textSymbol = "ᵢ" }, -- Subscript 'i'
+            [20] = { dialogText = "▢ⱼ", textSymbol = "ⱼ" }, -- Subscript 'j'
+            [21] = { dialogText = "▢ₖ", textSymbol = "ₖ" }, -- Subscript 'k'
+            [22] = { dialogText = "▢ₗ", textSymbol = "ₗ" }, -- Subscript 'l'
+            [23] = { dialogText = "▢ₘ", textSymbol = "ₘ" }, -- Subscript 'm'
+            [24] = { dialogText = "▢ₙ", textSymbol = "ₙ" }, -- Subscript 'n'
+            [25] = { dialogText = "▢ₒ", textSymbol = "ₒ" }, -- Subscript 'o'
+            [26] = { dialogText = "▢ₚ", textSymbol = "ₚ" }, -- Subscript 'p'
+            [27] = { dialogText = "▢ᵣ", textSymbol = "ᵣ" }, -- Subscript 'r'
+            [28] = { dialogText = "▢ₛ", textSymbol = "ₛ" }, -- Subscript 's'
+            [29] = { dialogText = "▢ₜ", textSymbol = "ₜ" }, -- Subscript 't'
+            [30] = { dialogText = "▢ᵤ", textSymbol = "ᵤ" }, -- Subscript 'u'
+            [31] = { dialogText = "▢ᵥ", textSymbol = "ᵥ" }, -- Subscript 'v'
+            [32] = { dialogText = "▢ₓ", textSymbol = "ₓ" }, -- Subscript 'x'
+            [33] = { dialogText = "▢ᵧ", textSymbol = "ᵧ" }, -- Subscript 'y'
         },       
     },
     [5] = {
