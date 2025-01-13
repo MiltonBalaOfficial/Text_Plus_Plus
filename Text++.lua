@@ -383,38 +383,35 @@ function createTextInputWindow()
         context:add_provider(css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
     end
 
--- Full color list with decimal values
-local colors = {
-    {16711680, "red"},       -- 16711680 corresponds to 0xff0000
-    {255, "blue"},           -- 255 corresponds to 0x0000FF
-    {32768, "green"},        -- 32768 corresponds to 0x008000
-    {16744448, "orange"},    -- 16744448 corresponds to 0xff8000
-    {16711935, "magenta"},   -- 16711935 corresponds to 0xff00ff
-    {49407, "lightblue"},    -- 49407 corresponds to 0x00c0ff
-    {65280, "lightgreen"},   -- 65280 corresponds to 0x00ff00
-    {16776960, "yellow"},    -- 16776960 corresponds to 0xffff00
-    {8421504, "gray"},       -- 8421504 corresponds to 0x808080
-    {0, "black"},            -- 0 corresponds to 0x000000
-    {16777215, "white"},     -- 16777215 corresponds to 0xffffff
+    -- Full color list with decimal values
+    local colors = {{16711680, "red"}, -- 16711680 corresponds to 0xff0000
+    {255, "blue"}, -- 255 corresponds to 0x0000FF
+    {32768, "green"}, -- 32768 corresponds to 0x008000
+    {16744448, "orange"}, -- 16744448 corresponds to 0xff8000
+    {16711935, "magenta"}, -- 16711935 corresponds to 0xff00ff
+    {49407, "lightblue"}, -- 49407 corresponds to 0x00c0ff
+    {65280, "lightgreen"}, -- 65280 corresponds to 0x00ff00
+    {16776960, "yellow"}, -- 16776960 corresponds to 0xffff00
+    {8421504, "gray"}, -- 8421504 corresponds to 0x808080
+    {0, "black"}, -- 0 corresponds to 0x000000
+    {16777215, "white"}, -- 16777215 corresponds to 0xffffff
     {12345678, "placeholder"} -- Add a placeholder color (e.g., 12345678 as an arbitrary default)
-}
+    }
 
--- Placeholder index
-local placeholder_index = #colors -- Set to the last index where the placeholder is
+    -- Placeholder index
+    local placeholder_index = #colors -- Set to the last index where the placeholder is
 
--- Find the index of the initial color in the colors list
-local color_index = placeholder_index -- Default to the placeholder index
-for i, color in ipairs(colors) do
-    if color[1] == fontColor then
-        color_index = i
-        break
+    -- Find the index of the initial color in the colors list
+    local color_index = placeholder_index -- Default to the placeholder index
+    for i, color in ipairs(colors) do
+        if color[1] == fontColor then
+            color_index = i
+            break
+        end
     end
-end
 
--- Update the placeholder color when initializing the plugin
-colors[placeholder_index][1] = fontColor
-
-
+    -- Update the placeholder color when initializing the plugin
+    colors[placeholder_index][1] = fontColor
 
     -- Function to update the color
     function update_color(drawing_area)
@@ -585,8 +582,7 @@ colors[placeholder_index][1] = fontColor
 
     -- Create a horizontal box for buttons at the bottom 
     local hbox_for_buttons_under_entry = Gtk.Box {
-        orientation = Gtk.Orientation.HORIZONTAL,
-        spacing = 10 -- Add some space between buttons
+        orientation = Gtk.Orientation.HORIZONTAL
     }
     vbox_under_input_right:pack_start(hbox_for_buttons_under_entry, false, true, 0) -- vertically expand false
 
@@ -596,18 +592,20 @@ colors[placeholder_index][1] = fontColor
     }
 
     -- Create a button
-    local color_picker_button = Gtk.Button {}
+    local color_picker_button = Gtk.Button {
+        margin_left = -10
+    }
 
     -- Create a container (box) to hold the drawing area
     local color_display_box = Gtk.Box {
-        orientation = Gtk.Orientation.VERTICAL,
+        orientation = Gtk.Orientation.VERTICAL
     }
 
     -- Create a drawing area for the color display
     local color_display = Gtk.DrawingArea {
         width = 30,
         height = 30,
-        on_draw = update_color,
+        on_draw = update_color
     }
 
     -- Add the drawing area to the container
@@ -615,7 +613,6 @@ colors[placeholder_index][1] = fontColor
 
     -- Add the container to the button
     color_picker_button:add(color_display_box)
-
 
     local font_color_forward_button = Gtk.Button {
         label = "≫"
@@ -633,7 +630,9 @@ colors[placeholder_index][1] = fontColor
             page_increment = 10
         },
         value = fontSize, -- Starting value
-        numeric = true
+        numeric = true,
+        margin_left = 10,
+        margin_right = 10
     }
     hbox_for_buttons_under_entry:pack_start(font_size_spin_button, false, false, 0)
 
@@ -642,17 +641,21 @@ colors[placeholder_index][1] = fontColor
         label = "<span font_family='" .. fontName .. "' font_size='13000'>" .. fontName .. "</span>",
         use_markup = true, -- Enable Pango markup
         xalign = 0, -- Align text to the left
-        width_request = 250,
+        width_request = 270,
         height_request = 20
+
     }
 
     -- Create the button and add the label as its child
-    local font_list_open_button = Gtk.Button {}
+    local font_list_open_button = Gtk.Button {
+        margin_right = 10
+    }
     font_list_open_button:add(open_button_label)
     hbox_for_buttons_under_entry:pack_start(font_list_open_button, false, false, 0)
 
     local clear_button = Gtk.Button {
-        label = "Clear All"
+        label = "Clear All",
+        margin_right = 10
     }
     hbox_for_buttons_under_entry:pack_start(clear_button, false, false, 0)
 
@@ -777,13 +780,13 @@ colors[placeholder_index][1] = fontColor
 
         fontName = font_name -- Update the global active font name
 
-        open_button_label:set_markup(
-            "<span font_family='" .. fontName .. "' font_size='13000'>" .. fontName .. "</span>")
+        open_button_label:set_markup("<span font_family='" .. fontName .. "' font_size='13000'>" .. fontName ..
+                                         "</span>")
 
         subwindow:hide() -- Close the subwindow after selection
         fontName = fontName
         set_font_style(text_view, fontSize * zoom_factor, fontName) -- set entry font size
- 
+
         -- Restore focus to the GtkTextView
         text_view:grab_focus()
     end
@@ -853,7 +856,6 @@ colors[placeholder_index][1] = fontColor
                 local b = math.floor(color.blue * 255)
                 fontColor = (r << 16) | (g << 8) | b
 
-                
                 set_font_style(text_view, fontSize * zoom_factor, fontName) -- set entry font size
                 -- Update the placeholder color
                 colors[placeholder_index][1] = fontColor
@@ -872,9 +874,6 @@ colors[placeholder_index][1] = fontColor
             print("Error:", err)
         end
     end
-
-
-
 
     -- Add function to the bottom buttons
     ok_button.on_clicked = function()
@@ -953,14 +952,14 @@ colors[placeholder_index][1] = fontColor
 
         -- Restore focus to the GtkTextView
         text_view:grab_focus()
-    end 
+    end
 
     font_color_forward_button.on_clicked = function()
         change_color(1)
 
         -- Restore focus to the GtkTextView
         text_view:grab_focus()
-    end 
+    end
 
     -- focus to the GtkTextView
     text_view:grab_focus()
