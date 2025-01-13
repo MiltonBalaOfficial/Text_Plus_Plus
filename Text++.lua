@@ -383,28 +383,38 @@ function createTextInputWindow()
         context:add_provider(css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
     end
 
-    -- Full color list with decimal values
-    local colors = {{16711680, "red"}, -- 16711680 corresponds to 0xff0000
-    {255, "blue"}, -- 255 corresponds to 0x0000FF
-    {32768, "green"}, -- 32768 corresponds to 0x008000
-    {16744448, "orange"}, -- 16744448 corresponds to 0xff8000
-    {16711935, "magenta"}, -- 16711935 corresponds to 0xff00ff
-    {49407, "lightblue"}, -- 49407 corresponds to 0x00c0ff
-    {65280, "lightgreen"}, -- 65280 corresponds to 0x00ff00
-    {16776960, "yellow"}, -- 16776960 corresponds to 0xffff00
-    {8421504, "gray"}, -- 8421504 corresponds to 0x808080
-    {0, "black"}, -- 0 corresponds to 0x000000
-    {16777215, "white"} -- 16777215 corresponds to 0xffffff
-    }
+-- Full color list with decimal values
+local colors = {
+    {16711680, "red"},       -- 16711680 corresponds to 0xff0000
+    {255, "blue"},           -- 255 corresponds to 0x0000FF
+    {32768, "green"},        -- 32768 corresponds to 0x008000
+    {16744448, "orange"},    -- 16744448 corresponds to 0xff8000
+    {16711935, "magenta"},   -- 16711935 corresponds to 0xff00ff
+    {49407, "lightblue"},    -- 49407 corresponds to 0x00c0ff
+    {65280, "lightgreen"},   -- 65280 corresponds to 0x00ff00
+    {16776960, "yellow"},    -- 16776960 corresponds to 0xffff00
+    {8421504, "gray"},       -- 8421504 corresponds to 0x808080
+    {0, "black"},            -- 0 corresponds to 0x000000
+    {16777215, "white"},     -- 16777215 corresponds to 0xffffff
+    {12345678, "placeholder"} -- Add a placeholder color (e.g., 12345678 as an arbitrary default)
+}
 
-    -- Find the index of the initial color in the colors list
-    local color_index = 1
-    for i, color in ipairs(colors) do
-        if color[1] == fontColor then
-            color_index = i
-            break
-        end
+-- Placeholder index
+local placeholder_index = #colors -- Set to the last index where the placeholder is
+
+-- Find the index of the initial color in the colors list
+local color_index = placeholder_index -- Default to the placeholder index
+for i, color in ipairs(colors) do
+    if color[1] == fontColor then
+        color_index = i
+        break
     end
+end
+
+-- Update the placeholder color when initializing the plugin
+colors[placeholder_index][1] = fontColor
+
+
 
     -- Function to update the color
     function update_color(drawing_area)
@@ -462,7 +472,7 @@ function createTextInputWindow()
     }
     window:add(main_vertical_layout_box)
 
-    -- Create a horizontal box for buttons at the bottom (First child of vbox_under_input_right)
+    -- Create a horizontal box for buttons at the bottom
     local hbox_for_top_buttons = Gtk.Box {
         orientation = Gtk.Orientation.HORIZONTAL,
         spacing = 10 -- Add some space between buttons
@@ -478,7 +488,7 @@ function createTextInputWindow()
         label = "Set Position" -- Initial label
     }
 
-    -- Create OK button and other buttons at the bottom (First child of hbox_buttons_bottom)
+    -- Create OK button and other buttons at the bottom 
     local cancel_button = Gtk.Button {
         label = "Close Window"
     }
@@ -526,34 +536,34 @@ function createTextInputWindow()
     local context = main_vertical_box_below_text_view:get_style_context()
     context:add_provider(customCssProvider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
 
-    -- Create horizontal separator (second child of main_vertical_box_below_text_view)
+    -- Create horizontal separator 
     local horizontal_separator = Gtk.Separator {
         orientation = Gtk.Orientation.HORIZONTAL
     }
     main_vertical_box_below_text_view:pack_start(horizontal_separator, false, false, 0)
 
-    -- Create a horizontal box for categories one side and others one side (third child of main_vertical_box_below_text_view)
+    -- Create a horizontal box for categories one side and others one side
     local hbox_middle_of_main_vbox = Gtk.Box {
         orientation = Gtk.Orientation.HORIZONTAL,
         spacing = 10 -- Add some space between buttons
     }
     main_vertical_box_below_text_view:pack_start(hbox_middle_of_main_vbox, false, true, 0)
 
-    -- Create a vertical box at the left part of hbox_middle_of_main_vbox (First child of hbox_middle_of_main_vbox)
+    -- Create a vertical box at the left part of hbox_middle_of_main_vbox 
     local vbox_under_input_left = Gtk.Box {
         orientation = Gtk.Orientation.VERTICAL,
         spacing = 10 -- Add some space between buttons
     }
     hbox_middle_of_main_vbox:pack_start(vbox_under_input_left, false, false, 0)
 
-    -- Create a foot note at the bottom (First child of vbox_under_input_left)
+    -- Create a foot note at the bottom 
     local labelCategorySelection = Gtk.Label {
         label = "Choose a Category"
     }
     labelCategorySelection:set_markup("<span foreground='orange'>Choose a Category</span>") -- colored text
     vbox_under_input_left:pack_start(labelCategorySelection, false, false, 0)
 
-    -- Create a grid to hold the category buttons (Second child of vbox_under_input_left)
+    -- Create a grid to hold the category buttons 
     local category_grid = Gtk.Grid {
         column_spacing = 10,
         halign = Gtk.Align.CENTER,
@@ -561,19 +571,19 @@ function createTextInputWindow()
     }
     vbox_under_input_left:pack_start(category_grid, false, false, 0)
 
-    -- Create vertical separator (second child of hbox_middle_of_main_vbox)
+    -- Create vertical separator
     local vertical_separator_hBox_middle = Gtk.Separator {
         orientation = Gtk.Orientation.VERTICAL
     }
     hbox_middle_of_main_vbox:pack_start(vertical_separator_hBox_middle, false, false, 0)
 
-    -- create vertical box for the right part of the central horizontal box (third child of hbox_middle_of_main_vbox)
+    -- create vertical box for the right part of the central horizontal box 
     local vbox_under_input_right = Gtk.Box {
         orientation = Gtk.Orientation.VERTICAL
     }
     hbox_middle_of_main_vbox:pack_start(vbox_under_input_right, true, true, 0)
 
-    -- Create a horizontal box for buttons at the bottom (First child of vbox_under_input_right)
+    -- Create a horizontal box for buttons at the bottom 
     local hbox_for_buttons_under_entry = Gtk.Box {
         orientation = Gtk.Orientation.HORIZONTAL,
         spacing = 10 -- Add some space between buttons
@@ -585,25 +595,34 @@ function createTextInputWindow()
         label = "≪"
     }
 
-    -- Add the circle to a vertical box for alignment
-    local circle_box = Gtk.Box {
-        orientation = Gtk.Orientation.VERTICAL
+    -- Create a button
+    local color_picker_button = Gtk.Button {}
+
+    -- Create a container (box) to hold the drawing area
+    local color_display_box = Gtk.Box {
+        orientation = Gtk.Orientation.VERTICAL,
     }
 
     -- Create a drawing area for the color display
     local color_display = Gtk.DrawingArea {
         width = 30,
         height = 30,
-        on_draw = update_color
+        on_draw = update_color,
     }
-    circle_box:pack_start(color_display, true, false, 0)
+
+    -- Add the drawing area to the container
+    color_display_box:pack_start(color_display, true, true, 0)
+
+    -- Add the container to the button
+    color_picker_button:add(color_display_box)
+
 
     local font_color_forward_button = Gtk.Button {
         label = "≫"
     }
 
     hbox_for_buttons_under_entry:pack_start(font_color_backward_button, false, false, 0)
-    hbox_for_buttons_under_entry:pack_start(circle_box, false, false, 0)
+    hbox_for_buttons_under_entry:pack_start(color_picker_button, false, false, 0)
     hbox_for_buttons_under_entry:pack_start(font_color_forward_button, false, false, 0)
 
     local font_size_spin_button = Gtk.SpinButton { -- font increase decrease field
@@ -710,8 +729,6 @@ function createTextInputWindow()
         end
     end
 
-
-
     -- Create the subwindow for font selection
     local subwindow = Gtk.Window {
         title = "Select a Font",
@@ -729,7 +746,7 @@ function createTextInputWindow()
         child = font_list
     }
     subwindow:add(font_list_container)
-    
+
     -- Populate the font list
     local fonts = get_sorted_font_list()
     for _, font_name in ipairs(fonts) do
@@ -766,10 +783,14 @@ function createTextInputWindow()
         subwindow:hide() -- Close the subwindow after selection
         fontName = fontName
         set_font_style(text_view, fontSize * zoom_factor, fontName) -- set entry font size
+ 
+        -- Restore focus to the GtkTextView
+        text_view:grab_focus()
     end
 
     window:add(subwindow)
 
+    -- prevent destroy the subwindow
     subwindow.on_delete_event = function()
         subwindow:hide()
         return true -- Prevent default close behavior
@@ -802,9 +823,58 @@ function createTextInputWindow()
         else
             self:set_label("Set Position")
             isDynamicOff = nil -- once inserted then again make it nil 
+        end
 
+        -- Restore focus to the input field
+        text_view:grab_focus()
+    end
+
+    -- color picker button click event
+    color_picker_button.on_clicked = function()
+        -- Create a ColorChooserDialog
+        local dialog = Gtk.ColorChooserDialog {
+            title = "Choose a color",
+            transient_for = color_picker_window,
+            modal = true
+        }
+
+        -- Use a pcall (protected call) to ensure cleanup
+        local success, err = pcall(function()
+            -- Show the dialog and wait for user response
+            local response = dialog:run()
+
+            if response == Gtk.ResponseType.OK then
+                -- Get the selected color
+                local color = dialog:get_rgba()
+
+                -- Convert the RGBA values to a single decimal RGB value
+                local r = math.floor(color.red * 255)
+                local g = math.floor(color.green * 255)
+                local b = math.floor(color.blue * 255)
+                fontColor = (r << 16) | (g << 8) | b
+
+                
+                set_font_style(text_view, fontSize * zoom_factor, fontName) -- set entry font size
+                -- Update the placeholder color
+                colors[placeholder_index][1] = fontColor
+                color_index = #colors
+                -- Restore focus to the GtkTextView
+                text_view:grab_focus()
+            end
+
+        end)
+
+        -- Ensure the dialog is destroyed regardless of the result
+        dialog:destroy()
+
+        -- Log any error if occurred during the pcall
+        if not success then
+            print("Error:", err)
         end
     end
+
+
+
 
     -- Add function to the bottom buttons
     ok_button.on_clicked = function()
@@ -861,13 +931,16 @@ function createTextInputWindow()
         fontSize = font_size_spin_button.value
 
         set_font_style(text_view, fontSize * zoom_factor, fontName) -- set entry font size
+
+        -- Restore focus to the GtkTextView
+        text_view:grab_focus()
     end
 
     clear_button.on_clicked = function()
         text_buffer:set_text("", -1)
 
         -- Restore focus to the input field
-        text_buffer:grab_focus()
+        text_view:grab_focus()
     end
 
     cancel_button.on_clicked = function()
@@ -878,12 +951,19 @@ function createTextInputWindow()
     font_color_backward_button.on_clicked = function()
         change_color(-1)
 
-    end -- Set on_clicked event
+        -- Restore focus to the GtkTextView
+        text_view:grab_focus()
+    end 
 
     font_color_forward_button.on_clicked = function()
         change_color(1)
 
-    end -- Set on_clicked event
+        -- Restore focus to the GtkTextView
+        text_view:grab_focus()
+    end 
+
+    -- focus to the GtkTextView
+    text_view:grab_focus()
 end
 --------------------------------------------Rotation enabled text------------------------------------------
 
