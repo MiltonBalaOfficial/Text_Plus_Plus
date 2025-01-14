@@ -195,7 +195,7 @@ function insertText(inputText, restoreTheDeletedText)
                 y = ActualTextPositionY
             }}
         }
-        -- app.addToSelection(refs)
+        app.addToSelection(refs)
         app.refreshPage()
     else
         local refs = app.addTexts {
@@ -210,7 +210,7 @@ function insertText(inputText, restoreTheDeletedText)
                 y = textPositionY
             }}
         }
-        -- app.addToSelection(refs)
+        app.addToSelection(refs)
         app.refreshPage()
 
         -- Switch to the previously active tool so that work could be continued
@@ -492,8 +492,8 @@ function createTextInputWindow()
     local ok_button = Gtk.Button {
         label = "Insert"
     }
-    local ok_pen_button = Gtk.Button {
-        label = "Insert & activate pen"
+    local ok_background_button = Gtk.Button {
+        label = "Insert with Background"
     }
     local ok_button_rotation = Gtk.Button {
         label = "Insert as rotation enabled"
@@ -501,7 +501,7 @@ function createTextInputWindow()
 
     hbox_for_top_buttons:pack_start(dynamic_position_toggle_button, false, false, 0)
     hbox_for_top_buttons:pack_start(cancel_button, false, false, 0)
-    hbox_for_top_buttons:pack_start(ok_pen_button, false, false, 0)
+    hbox_for_top_buttons:pack_start(ok_background_button, false, false, 0)
     hbox_for_top_buttons:pack_start(ok_button_rotation, false, false, 0)
     hbox_for_top_buttons:pack_start(ok_button, false, false, 0)
 
@@ -780,8 +780,7 @@ function createTextInputWindow()
 
         fontName = font_name -- Update the global active font name
 
-        open_button_label:set_markup("<span font_family='" .. fontName .. "' font_size='13000'>" .. fontName ..
-                                         "</span>")
+        open_button_label:set_markup("<span font_family='" .. fontName .. "' font_size='13000'>" .. fontName .. "</span>")
 
         subwindow:hide() -- Close the subwindow after selection
         fontName = fontName
@@ -908,7 +907,7 @@ function createTextInputWindow()
         end
     end
 
-    ok_pen_button.on_clicked = function()
+    ok_background_button.on_clicked = function()
         -- Get the current text from the buffer
         local start_iter = text_buffer:get_start_iter()
         local end_iter = text_buffer:get_end_iter()
@@ -918,9 +917,7 @@ function createTextInputWindow()
             print("The text field is empty. Please enter some text.")
         else
             insertText(inputText)
-            app.uiAction({
-                action = "ACTION_TOOL_PEN"
-            })
+            AddBoxToSelection(255, false)
             isDeletedAndNeedToBeAdded = nil -- operation successful, no need to add the deleted text
             window:destroy() -- closes the main window
         end
@@ -964,6 +961,138 @@ function createTextInputWindow()
     -- focus to the GtkTextView
     text_view:grab_focus()
 end
+
+
+-------------------------------------------Add Background---------------------------------------------
+-- Function to get the complementary color
+function getComplementaryColor(colorDecimal)
+    -- Extract RGB components from the decimal value
+    local red = (colorDecimal >> 16) & 0xFF
+    local green = (colorDecimal >> 8) & 0xFF
+    local blue = colorDecimal & 0xFF
+
+    -- Calculate complementary color components
+    local compRed = 255 - red
+    local compGreen = 255 - green
+    local compBlue = 255 - blue
+
+    -- Combine the complementary color components into a single decimal value
+    local compColorDecimal = (compRed << 16) | (compGreen << 8) | compBlue
+
+    return compColorDecimal
+end
+
+-- to make darker if bright 
+function darkenColorIfBrightCombined(colorDecimal, sumThreshold, maxThreshold, darkenPercentage)
+    -- Extract RGB components
+    local red = (colorDecimal >> 16) & 0xFF
+    local green = (colorDecimal >> 8) & 0xFF
+    local blue = colorDecimal & 0xFF
+
+    -- Calculate the sum of RGB values
+    local brightnessSum = red + green + blue
+
+    -- Find the maximum RGB value
+    local maxComponent = math.max(red, green, blue)
+
+    -- Check if the color is too bright (either sum or max exceeds threshold)
+    if brightnessSum > sumThreshold or maxComponent > maxThreshold then
+        -- Darken the color by reducing each component
+        local darkenFactor = 1 - darkenPercentage / 100
+        red = math.max(0, math.floor(red * darkenFactor))
+        green = math.max(0, math.floor(green * darkenFactor))
+        blue = math.max(0, math.floor(blue * darkenFactor))
+    end
+
+    -- Combine the darkened RGB components back into a single decimal value
+    local darkenedColorDecimal = (red << 16) | (green << 8) | blue
+
+    return darkenedColorDecimal
+end
+
+
+
+
+
+  -- Function to compute selection corners
+  function getCorners()
+    -- Retrieve selection information
+    local selInfo = app.getToolInfo("selection")
+    if not selInfo then
+        error("First select some strokes or texts!") -- Notify user if no selection
+        return nil
+    end
+  
+    local boundingBox = selInfo.boundingBox
+  
+    -- Compute the four corners of the bounding box
+    local x1, y1 = boundingBox.x, boundingBox.y
+    local x2, y2 = boundingBox.x + boundingBox.width, boundingBox.y
+    local x3, y3 = boundingBox.x + boundingBox.width, boundingBox.y + boundingBox.height
+    local x4, y4 = boundingBox.x, boundingBox.y + boundingBox.height
+  
+    -- Return the corners in table format
+    return {
+        x = {x1 + 10, x2 - 10, x3 - 10, x4 + 10},
+        y = {y1 + 10, y2 + 10, y3 - 10, y4 - 10}
+    }
+  end
+  
+  -- Function to add a box (background or highlight) to the selection
+  function AddBoxToSelection(opacity, highlight)
+    -- Get the corners of the selection
+    local corners = getCorners()
+    if not corners then return end -- Exit if no selection
+  
+
+local complementaryColor = getComplementaryColor(fontColor)
+
+-- Make darker background if it is too bright
+local sumThreshold = 600 -- Sum threshold (max is 255 * 3 = 765)
+local maxThreshold = 240 -- Max brightness threshold
+local darkenPercentage = 30 -- Darken by 30%
+local finalBackgroundColor = darkenColorIfBrightCombined(complementaryColor, sumThreshold, maxThreshold, darkenPercentage)
+  
+    -- Define the box stroke
+    local box = {
+        x = {corners.x[1], corners.x[2], corners.x[3], corners.x[4], corners.x[1]}, -- Close the shape
+        y = {corners.y[1], corners.y[2], corners.y[3], corners.y[4], corners.y[1]}, -- Close the shape
+        width = 0.5, -- Stroke width
+        fill = opacity, -- Fill opacity
+        tool = "pen", -- Tool type
+        color = finalBackgroundColor -- Use the active pen color
+    }
+  
+    -- Get the currently selected strokes and texts
+    local strokes = app.getStrokes("selection") -- Retrieve strokes in selection
+    local selectedTexts = app.getTexts("selection") -- Retrieve texts in selection
+  
+    if highlight then
+        -- Add the highlight stroke over the selected Items
+        app.addStrokes({ strokes = { box }, allowUndoRedoAction = "grouped" })
+    else -- Adding background first then the selected Items again
+
+        -- Add the background first
+        app.addStrokes({ strokes = { box }, allowUndoRedoAction = "grouped" })
+  
+        -- Delete the current selection
+        app.uiAction({ action = "ACTION_DELETE" })
+  
+        -- Re-add all selected texts if available
+        if selectedTexts and #selectedTexts > 0 then
+            app.addTexts({ texts = selectedTexts }) -- Re-add all selected texts
+        end
+  
+        -- Re-add strokes if available
+        if strokes and #strokes > 0 then
+            app.addStrokes({ strokes = strokes, allowUndoRedoAction = "grouped" })
+        end 
+    end
+  
+    -- Refresh the page to apply changes
+    app.refreshPage()
+  end
+  
 --------------------------------------------Rotation enabled text------------------------------------------
 
 -- Finds the maximum X-coordinate in a set of strokes.
